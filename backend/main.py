@@ -9,19 +9,34 @@ from .models import Assignment, ChangeReview, Course
 app = FastAPI(title="Calendar Prototype Backend")
 
 # In-memory "database" for the prototype session
-courses: List[Course] = [
-    Course(id=uuid4(), name="COMP 101"),
-    Course(id=uuid4(), name="MATH 202"),
-]
+course_1 = Course(id=uuid4(), name="COMP 101")
+course_2 = Course(id=uuid4(), name="MATH 202")
+course_3 = Course(id=uuid4(), name="HIST 210")
+
+courses: List[Course] = [course_1, course_2, course_3]
 
 assignments: List[Assignment] = [
     Assignment(
         id=uuid4(),
-        title="Prototype Assignment",
-        description="This is a placeholder assignment.",
+        title="Essay Draft 1",
+        description="First draft of term essay.",
         due_date="2026-03-15",
-        course_id=courses[0].id,
-    )
+        course_id=course_1.id,
+    ),
+    Assignment(
+        id=uuid4(),
+        title="Problem Set 3",
+        description="Weekly math problem set.",
+        due_date="2026-03-17",
+        course_id=course_2.id,
+    ),
+    Assignment(
+        id=uuid4(),
+        title="Reading Quiz",
+        description="Short quiz on assigned readings.",
+        due_date="2026-03-19",
+        course_id=course_3.id,
+    ),
 ]
 
 pending_change: Optional[ChangeReview] = None

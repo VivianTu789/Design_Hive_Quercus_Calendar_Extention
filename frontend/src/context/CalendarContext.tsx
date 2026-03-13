@@ -24,7 +24,7 @@ interface CalendarContextValue extends CalendarState {
   closeChangeReview: () => void;
 }
 
-const STORAGE_KEY = 'calendar_prototype_state_v1';
+const STORAGE_KEY = 'calendar_prototype_state_v2';
 
 const CalendarContext = createContext<CalendarContextValue | undefined>(undefined);
 
@@ -32,7 +32,23 @@ const createInitialState = (): CalendarState => {
   const saved = window.localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
-      return JSON.parse(saved) as CalendarState;
+      const parsed = JSON.parse(saved) as CalendarState;
+      const normalizedAssignments: Assignment[] = (parsed.assignments || []).map((a) => {
+        // Normalize any old placeholder times to a consistent 11:59 PM default.
+        let dueTime = a.dueTime;
+        if (!dueTime || /am|pm/i.test(dueTime)) {
+          dueTime = '23:59';
+        }
+        return { ...a, dueTime };
+      });
+      // Always start with panels closed when the app first loads.
+      return {
+        ...parsed,
+        assignments: normalizedAssignments,
+        selectedAssignmentId: undefined,
+        isImportOpen: false,
+        isChangeReviewOpen: false,
+      };
     } catch {
       // ignore parse errors and fall back to defaults
     }
@@ -42,15 +58,39 @@ const createInitialState = (): CalendarState => {
   const courses: Course[] = [
     { id: 'course-1', name: 'COMP 101' },
     { id: 'course-2', name: 'MATH 202' },
+    { id: 'course-3', name: 'HIST 210' },
   ];
+
+  const now = new Date();
+  const oneDayMs = 24 * 60 * 60 * 1000;
 
   const assignments: Assignment[] = [
     {
       id: 'a-1',
-      title: 'Example Assignment',
-      description: 'This is a placeholder assignment in the calendar.',
-      dueDate: new Date().toISOString(),
+      title: 'Essay Draft 1',
+      description: 'First draft of term essay.',
+      dueDate: new Date(now.getTime() + oneDayMs).toISOString(),
+      dueTime: '23:59',
       courseId: 'course-1',
+      assignmentLink: 'https://example.com/assignments/essay-draft-1',
+    },
+    {
+      id: 'a-2',
+      title: 'Problem Set 3',
+      description: 'Weekly math problem set.',
+      dueDate: new Date(now.getTime() + 3 * oneDayMs).toISOString(),
+      dueTime: '17:00',
+      courseId: 'course-2',
+      assignmentLink: 'https://example.com/assignments/problem-set-3',
+    },
+    {
+      id: 'a-3',
+      title: 'Reading Quiz',
+      description: 'Short quiz on assigned readings.',
+      dueDate: new Date(now.getTime() + 5 * oneDayMs).toISOString(),
+      dueTime: '09:00',
+      courseId: 'course-3',
+      assignmentLink: 'https://example.com/assignments/reading-quiz',
     },
   ];
 
