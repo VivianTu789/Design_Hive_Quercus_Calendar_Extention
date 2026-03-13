@@ -1,9 +1,12 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Assignment, CalendarView } from '../models/assignment';
 import type { Course } from '../models/course';
 
 interface CalendarState {
   view: CalendarView;
+  currentDate: Date;
+  selectedDate: Date;
   assignments: Assignment[];
   courses: Course[];
   selectedAssignmentId?: string;
@@ -13,6 +16,13 @@ interface CalendarState {
 
 interface CalendarContextValue extends CalendarState {
   setView: (view: CalendarView) => void;
+  setCurrentDate: (date: Date) => void;
+  setSelectedDate: (date: Date) => void;
+  navigateToDate: (date: Date) => void;
+  navigateToToday: () => void;
+  navigateMonth: (direction: number) => void;
+  navigateWeek: (direction: number) => void;
+  navigateDay: (direction: number) => void;
   addAssignment: (assignment: Assignment) => void;
   updateAssignment: (assignment: Assignment) => void;
   deleteAssignment: (id: string) => void;
@@ -96,6 +106,8 @@ const createInitialState = (): CalendarState => {
 
   return {
     view: 'month',
+    currentDate: new Date(),
+    selectedDate: new Date(),
     assignments,
     courses,
     selectedAssignmentId: undefined,
@@ -115,6 +127,28 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       ...state,
       setView: (view) => setState((s) => ({ ...s, view })),
+      setCurrentDate: (date) => setState((s) => ({ ...s, currentDate: date })),
+      setSelectedDate: (date) => setState((s) => ({ ...s, selectedDate: date })),
+      navigateToDate: (date) => setState((s) => ({ ...s, currentDate: date, selectedDate: date })),
+      navigateToToday: () => {
+        const today = new Date();
+        setState((s) => ({ ...s, currentDate: today, selectedDate: today }));
+      },
+      navigateMonth: (direction) => setState((s) => {
+        const newDate = new Date(s.currentDate);
+        newDate.setMonth(newDate.getMonth() + direction);
+        return { ...s, currentDate: newDate };
+      }),
+      navigateWeek: (direction) => setState((s) => {
+        const newDate = new Date(s.currentDate);
+        newDate.setDate(newDate.getDate() + (direction * 7));
+        return { ...s, currentDate: newDate };
+      }),
+      navigateDay: (direction) => setState((s) => {
+        const newDate = new Date(s.currentDate);
+        newDate.setDate(newDate.getDate() + direction);
+        return { ...s, currentDate: newDate };
+      }),
       addAssignment: (assignment) =>
         setState((s) => ({ ...s, assignments: [...s.assignments, assignment] })),
       updateAssignment: (assignment) =>
