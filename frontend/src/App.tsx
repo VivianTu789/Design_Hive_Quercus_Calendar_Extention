@@ -12,10 +12,10 @@ const Layout = () => {
         <h2 className="app-title">Calendar Prototype</h2>
         <ul>
           <li>
-            <Link to="/">Calendar</Link>
+            <Link to="/dashboard">Dashboard</Link>
           </li>
           <li>
-            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/calendar">Calendar</Link>
           </li>
         </ul>
       </nav>

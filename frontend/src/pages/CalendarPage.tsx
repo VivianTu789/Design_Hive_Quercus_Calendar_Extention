@@ -1,7 +1,30 @@
 import { useCalendar } from '../context/CalendarContext';
 import type { Assignment } from '../models/assignment';
 
-const formatDate = (iso: string) => new Date(iso).toLocaleString();
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString();
+
+const formatTime = (time?: string, isoDate?: string) => {
+  const raw = time;
+  if (!raw && !isoDate) return '';
+
+  // Prefer explicit time if provided in "HH:MM" 24-hour format.
+  const sourceTime = raw && raw.includes(':') ? raw : undefined;
+
+  if (sourceTime) {
+    const [hours, minutes] = sourceTime.split(':');
+    const d = new Date();
+    d.setHours(Number(hours), Number(minutes), 0, 0);
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  // Fallback: derive from dueDate if it has a time component.
+  if (isoDate) {
+    const d = new Date(isoDate);
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  return '';
+};
 
 const CalendarViewSwitcher = () => {
   const { view, setView } = useCalendar();
@@ -36,6 +59,7 @@ const CalendarGrid = ({ assignments }: { assignments: Assignment[] }) => {
 const AssignmentCard = ({ assignment }: { assignment: Assignment }) => {
   const { openAssignment, courses } = useCalendar();
   const course = courses.find((c) => c.id === assignment.courseId);
+  const timeLabel = formatTime(assignment.dueTime, assignment.dueDate);
   return (
     <button
       type="button"
@@ -45,7 +69,10 @@ const AssignmentCard = ({ assignment }: { assignment: Assignment }) => {
       <div className="assignment-title">{assignment.title}</div>
       <div className="assignment-meta">
         <span>{course?.name ?? 'Unassigned course'}</span>
-        <span>{formatDate(assignment.dueDate)}</span>
+        <span>
+          Due Date: {formatDate(assignment.dueDate)}
+          {timeLabel ? ` ${timeLabel}` : ''}
+        </span>
       </div>
     </button>
   );
