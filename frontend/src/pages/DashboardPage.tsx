@@ -11,12 +11,7 @@ export const DashboardPage = () => {
           Change Review
         </button>
       </div>
-      <header className="page-header">
-        <div>
-          <h1>Dashboard (Prototype)</h1>
-          <p>This replicates the host app dashboard with a change alert.</p>
-        </div>
-      </header>
+      <div className="dashboard-bg-block" />
     </main>
   );
 };
