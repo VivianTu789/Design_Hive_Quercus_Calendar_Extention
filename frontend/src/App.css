@@ -10,17 +10,28 @@
 .sidebar {
   background: var(--bg-sidebar);
   color: var(--text-white);
-  padding: 1.5rem 1rem;
+  padding: 1.25rem 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 1.25rem;
   min-height: 100vh;
 }
 
-.app-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0;
+.sidebar-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0 0.25rem;
+}
+
+.sidebar-logo-img {
+  width: 100%;
+  max-width: 56px;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
 }
 
 .sidebar ul {
@@ -29,7 +40,8 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
+  width: 100%;
 }
 
 .sidebar li {
@@ -38,15 +50,26 @@
 
 .sidebar a {
   color: var(--text-light);
-  padding: 0.65rem 0.75rem;
+  padding: 0.6rem 0.4rem;
   border-radius: var(--radius-md);
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar a:hover {
   background: var(--bg-sidebar-hover);
   color: var(--text-white);
+}
+
+.nav-label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.02em;
 }
 
 .content {
@@ -608,21 +631,15 @@ button.danger {
   display: flex;
   flex-direction: column;
   flex: 1;
-  background: #ffffff;
-  margin: -2rem;
-  width: calc(100% + 4rem);
+  gap: 1.5rem;
   max-width: none;
-}
-
-.dashboard-page .change-alert-banner {
-  margin-bottom: 0;
-  border-radius: 0;
 }
 
 .dashboard-bg-block {
   flex: 1;
   background-image: url('/image.png');
   background-size: 100% 100%;
+  border-radius: var(--radius-lg);
 }
 
 .change-alert-banner {
@@ -725,8 +742,18 @@ button.danger {
   .sidebar {
     min-height: auto;
     width: 100%;
-    padding: 1rem;
+    flex-direction: row;
+    padding: 0.75rem 1rem;
     gap: 1rem;
+    align-items: center;
+  }
+
+  .sidebar-logo-wrap {
+    width: auto;
+  }
+
+  .sidebar-logo-img {
+    max-width: 40px;
   }
 
   .sidebar ul {
