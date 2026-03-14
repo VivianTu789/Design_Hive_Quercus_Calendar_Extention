@@ -38,33 +38,34 @@ const STORAGE_KEY = 'calendar_prototype_state_v2';
 
 const CalendarContext = createContext<CalendarContextValue | undefined>(undefined);
 
-const createInitialState = (): CalendarState => {
-  const saved = window.localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved) as CalendarState;
-      const normalizedAssignments: Assignment[] = (parsed.assignments || []).map((a) => {
-        // Normalize any old placeholder times to a consistent 11:59 PM default.
-        let dueTime = a.dueTime;
-        if (!dueTime || /am|pm/i.test(dueTime)) {
-          dueTime = '23:59';
-        }
-        return { ...a, dueTime };
-      });
-      // Always start with panels closed when the app first loads.
-      return {
-        ...parsed,
-        assignments: normalizedAssignments,
-        selectedAssignmentId: undefined,
-        isImportOpen: false,
-        isChangeReviewOpen: false,
-      };
-    } catch {
-      // ignore parse errors and fall back to defaults
-    }
-  }
+const isValidDate = (value: unknown): value is string | number | Date => {
+  if (value === null || value === undefined) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
+};
 
-  // Seed with some fake data
+const toDate = (value: unknown, fallback = new Date()): Date => {
+  return isValidDate(value) ? new Date(value) : fallback;
+};
+
+const normalizeAssignment = (assignment: Partial<Assignment>): Assignment => {
+  return {
+    id: assignment.id ?? crypto.randomUUID(),
+    title: assignment.title ?? 'Untitled Assignment',
+    description: assignment.description ?? '',
+    dueDate: isValidDate(assignment.dueDate)
+      ? new Date(assignment.dueDate).toISOString()
+      : new Date().toISOString(),
+    dueTime:
+      typeof assignment.dueTime === 'string' && /^\d{2}:\d{2}$/.test(assignment.dueTime)
+        ? assignment.dueTime
+        : '23:59',
+    courseId: assignment.courseId ?? '',
+    assignmentLink: assignment.assignmentLink ?? '',
+  };
+};
+
+const getDefaultState = (): CalendarState => {
   const courses: Course[] = [
     { id: 'course-1', name: 'COMP 101' },
     { id: 'course-2', name: 'MATH 202' },
@@ -106,8 +107,8 @@ const createInitialState = (): CalendarState => {
 
   return {
     view: 'month',
-    currentDate: new Date(),
-    selectedDate: new Date(),
+    currentDate: now,
+    selectedDate: now,
     assignments,
     courses,
     selectedAssignmentId: undefined,
@@ -116,8 +117,36 @@ const createInitialState = (): CalendarState => {
   };
 };
 
+const loadPersistedState = (): CalendarState => {
+  const fallback = getDefaultState();
+  const saved = window.localStorage.getItem(STORAGE_KEY);
+
+  if (!saved) return fallback;
+
+  try {
+    const parsed = JSON.parse(saved) as Partial<CalendarState>;
+
+    return {
+      view: parsed.view === 'month' || parsed.view === 'week' || parsed.view === 'day'
+        ? parsed.view
+        : fallback.view,
+      currentDate: toDate(parsed.currentDate, fallback.currentDate),
+      selectedDate: toDate(parsed.selectedDate, fallback.selectedDate),
+      assignments: Array.isArray(parsed.assignments)
+        ? parsed.assignments.map((a) => normalizeAssignment(a))
+        : fallback.assignments,
+      courses: Array.isArray(parsed.courses) ? parsed.courses : fallback.courses,
+      selectedAssignmentId: undefined,
+      isImportOpen: false,
+      isChangeReviewOpen: false,
+    };
+  } catch {
+    return fallback;
+  }
+};
+
 export const CalendarProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<CalendarState>(() => createInitialState());
+  const [state, setState] = useState<CalendarState>(loadPersistedState);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -134,27 +163,32 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
         const today = new Date();
         setState((s) => ({ ...s, currentDate: today, selectedDate: today }));
       },
-      navigateMonth: (direction) => setState((s) => {
-        const newDate = new Date(s.currentDate);
-        newDate.setMonth(newDate.getMonth() + direction);
-        return { ...s, currentDate: newDate };
-      }),
-      navigateWeek: (direction) => setState((s) => {
-        const newDate = new Date(s.currentDate);
-        newDate.setDate(newDate.getDate() + (direction * 7));
-        return { ...s, currentDate: newDate };
-      }),
-      navigateDay: (direction) => setState((s) => {
-        const newDate = new Date(s.currentDate);
-        newDate.setDate(newDate.getDate() + direction);
-        return { ...s, currentDate: newDate };
-      }),
+      navigateMonth: (direction) =>
+        setState((s) => {
+          const newDate = new Date(s.currentDate);
+          newDate.setMonth(newDate.getMonth() + direction);
+          return { ...s, currentDate: newDate };
+        }),
+      navigateWeek: (direction) =>
+        setState((s) => {
+          const newDate = new Date(s.currentDate);
+          newDate.setDate(newDate.getDate() + direction * 7);
+          return { ...s, currentDate: newDate };
+        }),
+      navigateDay: (direction) =>
+        setState((s) => {
+          const newDate = new Date(s.currentDate);
+          newDate.setDate(newDate.getDate() + direction);
+          return { ...s, currentDate: newDate };
+        }),
       addAssignment: (assignment) =>
-        setState((s) => ({ ...s, assignments: [...s.assignments, assignment] })),
+        setState((s) => ({ ...s, assignments: [...s.assignments, normalizeAssignment(assignment)] })),
       updateAssignment: (assignment) =>
         setState((s) => ({
           ...s,
-          assignments: s.assignments.map((a) => (a.id === assignment.id ? assignment : a)),
+          assignments: s.assignments.map((a) =>
+            a.id === assignment.id ? normalizeAssignment(assignment) : a,
+          ),
         })),
       deleteAssignment: (id) =>
         setState((s) => ({
@@ -162,36 +196,12 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
           assignments: s.assignments.filter((a) => a.id !== id),
           selectedAssignmentId: s.selectedAssignmentId === id ? undefined : s.selectedAssignmentId,
         })),
-      openAssignment: (id) =>
-        setState((s) => ({
-          ...s,
-          selectedAssignmentId: id,
-        })),
-      closeAssignment: () =>
-        setState((s) => ({
-          ...s,
-          selectedAssignmentId: undefined,
-        })),
-      openImport: () =>
-        setState((s) => ({
-          ...s,
-          isImportOpen: true,
-        })),
-      closeImport: () =>
-        setState((s) => ({
-          ...s,
-          isImportOpen: false,
-        })),
-      openChangeReview: () =>
-        setState((s) => ({
-          ...s,
-          isChangeReviewOpen: true,
-        })),
-      closeChangeReview: () =>
-        setState((s) => ({
-          ...s,
-          isChangeReviewOpen: false,
-        })),
+      openAssignment: (id) => setState((s) => ({ ...s, selectedAssignmentId: id })),
+      closeAssignment: () => setState((s) => ({ ...s, selectedAssignmentId: undefined })),
+      openImport: () => setState((s) => ({ ...s, isImportOpen: true })),
+      closeImport: () => setState((s) => ({ ...s, isImportOpen: false })),
+      openChangeReview: () => setState((s) => ({ ...s, isChangeReviewOpen: true })),
+      closeChangeReview: () => setState((s) => ({ ...s, isChangeReviewOpen: false })),
     }),
     [state],
   );
@@ -206,4 +216,3 @@ export const useCalendar = (): CalendarContextValue => {
   }
   return ctx;
 };
-
