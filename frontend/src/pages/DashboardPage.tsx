@@ -5,17 +5,18 @@ export const DashboardPage = () => {
 
   return (
     <main className="page dashboard-page">
+      <div className="change-alert-banner">
+        <p>Alert: You have 1 change to review.</p>
+        <button type="button" className="danger" onClick={openChangeReview}>
+          Change Review
+        </button>
+      </div>
       <header className="page-header">
         <div>
           <h1>Dashboard (Prototype)</h1>
           <p>This replicates the host app dashboard with a change alert.</p>
         </div>
       </header>
-      <section className="dashboard-content">
-        <button type="button" className="primary" onClick={openChangeReview}>
-          View 1 pending change
-        </button>
-      </section>
     </main>
   );
 };
