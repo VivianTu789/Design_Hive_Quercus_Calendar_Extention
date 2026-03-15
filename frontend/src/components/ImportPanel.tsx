@@ -96,10 +96,33 @@ export const ImportPanel = () => {
   return (
     <div className="modal-backdrop">
       <div className="modal large">
-        <header className="modal-header">
-          <h2>Import Assignments</h2>
-          <button type="button" className="ghost" onClick={closeImport}>
-            Close
+        <header className="modal-header" style={{
+          backgroundColor: '#0b3b76',
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '16px 24px',
+          position: 'relative',
+          borderRadius: '12px 12px 0 0'
+        }}>
+        <h2 style={{ 
+          margin: 0, 
+          fontSize: '24px', 
+          // fontWeight: 'bold',
+          textAlign: 'center',
+          flex: 1,
+          color: 'white' 
+        }}>Import Details</h2>
+          <button type="button" className="close-btn" onClick={closeImport}
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            fontSize: '28px', 
+            color: 'white', 
+            cursor: 'pointer' 
+          }}>
+            X
           </button>
         </header>
         <section className="modal-body">
