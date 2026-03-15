@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import type { Assignment } from '../models/assignment';
 
@@ -23,13 +23,33 @@ const groupByCourse = (assignments: Assignment[], courses: { id: string; name: s
 };
 
 export const ImportPanel = () => {
-  const { assignments, courses, isImportOpen, closeImport } = useCalendar();
+  const { assignments, courses, isImportOpen, closeImport, addAssignment } = useCalendar();
+  const [sourceType, setSourceType] = useState<'quercus' | 'ics' | 'google'>('quercus');
+  const [previewAssignments, setPreviewAssignments] = useState<Assignment[]>([]);
+  const [loading, setLoading] = useState(false);
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
 
-  if (!isImportOpen) return null;
+  useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setPreviewAssignments([
+        {
+          id: 'mock1',
+          title: 'Quercus Assignment 1',
+          description: 'Mock import',
+          dueDate: new Date(Date.now() + 86400000).toISOString(),
+          dueTime: '23:59',
+          courseId: courses[0]?.id || courses[0]?.id || 'course-1',
+          assignmentLink: ''
+        }
+      ]);
+      setLoading(false);
+    }, 500);
+  }, []);
 
-  const groups = groupByCourse(assignments, courses);
+  if (!isImportOpen) return null;
+  const groups = previewAssignments.length > 0 ? groupByCourse(previewAssignments, courses) : groupByCourse(assignments, courses);
 
   const toggleCourse = (courseId: string) => {
     setExpandedCourses((prev) => {
@@ -56,10 +76,22 @@ export const ImportPanel = () => {
   };
 
   const handleImport = () => {
-    // Placeholder: in a real app, this would push selected assignments into the calendar
-    // For now we just close the panel to simulate completion.
+    if (selectedAssignments.size === 0) {
+      alert('Select assignments to import!');
+      return;
+    }
+    selectedAssignments.forEach(id => {
+      const toImport = previewAssignments.find(a => a.id === id) || 
+                       assignments.find(a => a.id === id);
+      if (toImport) {
+        addAssignment(toImport);  // adds to calendar + saves localStorage
+      }
+    });
     closeImport();
+    alert(`${selectedAssignments.size} imported successfully!`);
   };
+
+  
 
   return (
     <div className="modal-backdrop">
