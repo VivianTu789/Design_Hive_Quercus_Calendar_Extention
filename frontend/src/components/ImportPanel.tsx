@@ -59,6 +59,7 @@ const IMPORT_ASSIGNMENTS: Assignment[] = [
     dueTime: '23:59',
     courseId: 'course-4',
     assignmentLink: '',
+    location: 'MY 150',
   },
   {
     id: 'imp-ece496-final-design-review',
@@ -68,6 +69,7 @@ const IMPORT_ASSIGNMENTS: Assignment[] = [
     dueTime: '23:59',
     courseId: 'course-4',
     assignmentLink: '',
+    location: 'BA 4128',
   },
   // JRE420
   {
@@ -224,6 +226,7 @@ const IMPORT_ASSIGNMENTS: Assignment[] = [
     dueTime: '23:59',
     courseId: 'course-7',
     assignmentLink: '',
+    location: 'SF 3202',
   },
   // ECE316
   {
@@ -234,6 +237,7 @@ const IMPORT_ASSIGNMENTS: Assignment[] = [
     dueTime: '23:59',
     courseId: 'course-8', // ECE316
     assignmentLink: '',
+    location: 'EX 310',
   },
   {
     id: 'imp-ece316-lab-4',
@@ -243,6 +247,7 @@ const IMPORT_ASSIGNMENTS: Assignment[] = [
     dueTime: '23:59',
     courseId: 'course-8',
     assignmentLink: '',
+    location: 'SF 2201',
   },
   {
     id: 'imp-ece316-lab-5',
@@ -252,6 +257,7 @@ const IMPORT_ASSIGNMENTS: Assignment[] = [
     dueTime: '23:59',
     courseId: 'course-8',
     assignmentLink: '',
+    location: 'SF 2201',
   },
 ];
 
@@ -308,7 +314,7 @@ export const ImportPanel = () => {
       );
 
       if (!alreadyExists) {
-        addAssignment(toImport);
+        addAssignment({ ...toImport, status: 'new' as const });
         importedCount += 1;
       }
     });

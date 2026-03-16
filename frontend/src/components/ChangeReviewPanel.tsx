@@ -8,7 +8,8 @@ const getSuggestedDate = () => {
 };
 
 export const ChangeReviewPanel = () => {
-  const { assignments, isChangeReviewOpen, closeChangeReview, updateAssignment } = useCalendar();
+  const { assignments, isChangeReviewOpen, closeChangeReview, updateAssignment, hideChangeAlert } =
+    useCalendar();
   const target = assignments[0];
   const [newDueDate, setNewDueDate] = useState<string>('');
   const [defaultDueDate, setDefaultDueDate] = useState<string>('');
@@ -24,7 +25,8 @@ export const ChangeReviewPanel = () => {
 
   const handleConfirm = () => {
     const iso = new Date(newDueDate).toISOString();
-    updateAssignment({ ...target, dueDate: iso });
+    updateAssignment({ ...target, dueDate: iso, status: 'changed' });
+    hideChangeAlert();
     closeChangeReview();
   };
 
@@ -43,11 +45,31 @@ export const ChangeReviewPanel = () => {
         </header>
         <section className="modal-body">
           <p>
-            This panel represents a pending change to a deadline coming from the host application.
+            There has been a change to an assignment that needs your attention and confirmation to update the calendar.
           </p>
           <p>
             <strong>Assignment:</strong> {target.title}
           </p>
+          <p>
+            <strong>Former due date:</strong>{' '}
+            {new Date(target.dueDate).toLocaleString([], {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })}
+          </p>
+          <div className="field">
+            <label className="field-label-prominent">Source of Change</label>
+            <p>
+              <a
+                href="https://example.com/announcement"
+                target="_blank"
+                rel="noreferrer"
+                className="assignment-link"
+              >
+                Example Announcement
+              </a>
+            </p>
+          </div>
           <div className="field">
             <label htmlFor="newDueDate" className="field-label-prominent">New Due Date</label>
             <div className="field-row">

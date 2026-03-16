@@ -10,9 +10,12 @@ interface CalendarState {
   assignments: Assignment[];
   courses: Course[];
   visibleCourseIds: string[];
+  showUncategorized: boolean;
   selectedAssignmentId?: string;
   isImportOpen: boolean;
   isChangeReviewOpen: boolean;
+  isCreateOpen: boolean;
+  showChangeAlert: boolean;
 }
 
 interface CalendarContextValue extends CalendarState {
@@ -28,12 +31,18 @@ interface CalendarContextValue extends CalendarState {
   updateAssignment: (assignment: Assignment) => void;
   deleteAssignment: (id: string) => void;
   setVisibleCourseIds: (ids: string[]) => void;
+  setShowUncategorized: (show: boolean) => void;
+  markAllSeen: () => void;
+  hideChangeAlert: () => void;
+  showChangeAlertBanner: () => void;
   openAssignment: (id: string | undefined) => void;
   closeAssignment: () => void;
   openImport: () => void;
   closeImport: () => void;
   openChangeReview: () => void;
   closeChangeReview: () => void;
+  openCreate: () => void;
+  closeCreate: () => void;
 }
 
 const STORAGE_KEY = 'calendar_prototype_state_v2';
@@ -42,12 +51,12 @@ const CalendarContext = createContext<CalendarContextValue | undefined>(undefine
 
 const isValidDate = (value: unknown): value is string | number | Date => {
   if (value === null || value === undefined) return false;
-  const date = new Date(value);
+  const date = new Date(value as string | number | Date);
   return !Number.isNaN(date.getTime());
 };
 
 const toDate = (value: unknown, fallback = new Date()): Date => {
-  return isValidDate(value) ? new Date(value) : fallback;
+  return isValidDate(value) ? new Date(value as string | number | Date) : fallback;
 };
 
 const normalizeAssignment = (assignment: Partial<Assignment>): Assignment => {
@@ -64,6 +73,8 @@ const normalizeAssignment = (assignment: Partial<Assignment>): Assignment => {
         : '23:59',
     courseId: assignment.courseId ?? '',
     assignmentLink: assignment.assignmentLink ?? '',
+    location: assignment.location ?? '',
+    status: assignment.status,
   };
 };
 
@@ -93,6 +104,7 @@ const getDefaultState = (): CalendarState => {
       dueTime: '23:59',
       courseId: 'course-6',
       assignmentLink: '',
+      location: 'MY 420',
     },
     {
       id: 'csc318-studio-4',
@@ -102,6 +114,7 @@ const getDefaultState = (): CalendarState => {
       dueTime: '23:59',
       courseId: 'course-6',
       assignmentLink: '',
+      location: 'MY 420',
     },
     {
       id: 'csc318-studio-4-critique',
@@ -178,6 +191,7 @@ const getDefaultState = (): CalendarState => {
       dueTime: '18:00',
       courseId: 'course-5',
       assignmentLink: '',
+      location: 'MY 490',
     },
 
     // CSC318 - additional defaults
@@ -189,6 +203,7 @@ const getDefaultState = (): CalendarState => {
       dueTime: '09:00',
       courseId: 'course-6',
       assignmentLink: '',
+      location: 'MY 420',
     },
     {
       id: 'csc318-g3-high-fidelity-prototype',
@@ -229,6 +244,41 @@ const getDefaultState = (): CalendarState => {
       dueTime: '23:59',
       courseId: 'course-8',
       assignmentLink: '',
+      location: 'SF 2201',
+    },
+    // Intro sample assignments for COMP 101, MATH 202, HIST 210
+    {
+      id: 'comp101-assignment-1',
+      title: 'COMP 101 Assignment',
+      description: 'Sample assignment for COMP 101.',
+      // One year back
+      dueDate: new Date(currentYear - 1, 2, 10, 23, 59).toISOString(),
+      dueTime: '23:59',
+      courseId: 'course-1',
+      assignmentLink: '',
+      location: '',
+    },
+    {
+      id: 'math202-assignment-1',
+      title: 'MATH 202 Assignment',
+      description: 'Sample assignment for MATH 202.',
+      // One year back
+      dueDate: new Date(currentYear - 1, 2, 15, 23, 59).toISOString(),
+      dueTime: '23:59',
+      courseId: 'course-2',
+      assignmentLink: '',
+      location: '',
+    },
+    {
+      id: 'hist210-assignment-1',
+      title: 'HIST 210 Assignment',
+      description: 'Sample assignment for HIST 210.',
+      // One year back
+      dueDate: new Date(currentYear - 1, 2, 20, 23, 59).toISOString(),
+      dueTime: '23:59',
+      courseId: 'course-3',
+      assignmentLink: '',
+      location: '',
     },
   ];
 
@@ -239,9 +289,12 @@ const getDefaultState = (): CalendarState => {
     assignments,
     courses,
     visibleCourseIds: courses.map((c) => c.id),
+    showUncategorized: true,
     selectedAssignmentId: undefined,
     isImportOpen: false,
     isChangeReviewOpen: false,
+    isCreateOpen: false,
+    showChangeAlert: true,
   };
 };
 
@@ -267,9 +320,15 @@ const loadPersistedState = (): CalendarState => {
       visibleCourseIds: Array.isArray(parsed.visibleCourseIds)
         ? parsed.visibleCourseIds
         : fallback.visibleCourseIds,
+      showUncategorized:
+        typeof (parsed as any).showUncategorized === 'boolean'
+          ? (parsed as any).showUncategorized
+          : true,
       selectedAssignmentId: undefined,
       isImportOpen: false,
       isChangeReviewOpen: false,
+      isCreateOpen: false,
+      showChangeAlert: true,
     };
   } catch {
     return fallback;
@@ -317,6 +376,11 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
           ...s,
           visibleCourseIds: ids,
         })),
+      setShowUncategorized: (show) =>
+        setState((s) => ({
+          ...s,
+          showUncategorized: show,
+        })),
       addAssignment: (assignment) =>
         setState((s) => ({ ...s, assignments: [...s.assignments, normalizeAssignment(assignment)] })),
       updateAssignment: (assignment) =>
@@ -332,12 +396,31 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
           assignments: s.assignments.filter((a) => a.id !== id),
           selectedAssignmentId: s.selectedAssignmentId === id ? undefined : s.selectedAssignmentId,
         })),
-      openAssignment: (id) => setState((s) => ({ ...s, selectedAssignmentId: id })),
+      openAssignment: (id) =>
+        setState((s) => ({
+          ...s,
+          selectedAssignmentId: id,
+          assignments: s.assignments.map((a) =>
+            a.id === id ? { ...a, status: undefined } : a,
+          ),
+        })),
       closeAssignment: () => setState((s) => ({ ...s, selectedAssignmentId: undefined })),
       openImport: () => setState((s) => ({ ...s, isImportOpen: true })),
       closeImport: () => setState((s) => ({ ...s, isImportOpen: false })),
       openChangeReview: () => setState((s) => ({ ...s, isChangeReviewOpen: true })),
       closeChangeReview: () => setState((s) => ({ ...s, isChangeReviewOpen: false })),
+      openCreate: () => setState((s) => ({ ...s, isCreateOpen: true })),
+      closeCreate: () => setState((s) => ({ ...s, isCreateOpen: false })),
+      markAllSeen: () =>
+        setState((s) => ({
+          ...s,
+          assignments: s.assignments.map((a) => ({
+            ...a,
+            status: undefined,
+          })),
+        })),
+      hideChangeAlert: () => setState((s) => ({ ...s, showChangeAlert: false })),
+      showChangeAlertBanner: () => setState((s) => ({ ...s, showChangeAlert: true })),
     }),
     [state],
   );
