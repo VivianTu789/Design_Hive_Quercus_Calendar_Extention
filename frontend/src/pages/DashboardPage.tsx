@@ -18,10 +18,10 @@ export const DashboardPage = () => {
         onClick={showChangeAlertBanner}
         style={{
           position: 'fixed',
-          bottom: '16px',
-          right: '16px',
-          width: '24px',
-          height: '24px',
+          bottom: '24px',
+          right: '24px',
+          width: '48px',
+          height: '48px',
           borderRadius: '999px',
           border: 'none',
           backgroundColor: 'transparent',
@@ -30,7 +30,7 @@ export const DashboardPage = () => {
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.opacity = '1';
-          e.currentTarget.style.backgroundColor = '#e5e7eb';
+          e.currentTarget.style.backgroundColor = '#facc15';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.opacity = '0';

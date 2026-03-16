@@ -39,8 +39,13 @@ export const ChangeReviewPanel = () => {
       <div className="modal">
         <header className="modal-header">
           <h2>Review Change</h2>
-          <button type="button" className="modal-close-btn" onClick={closeChangeReview} aria-label="Close">
-            ✕
+          <button
+            type="button"
+            className="close-button"
+            onClick={closeChangeReview}
+            aria-label="Close"
+          >
+            ×
           </button>
         </header>
         <section className="modal-body">
