@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 import { AssignmentPanel } from './components/AssignmentPanel';
+import { CreateAssignmentPanel } from './components/CreateAssignmentPanel';
 import { ChangeReviewPanel } from './components/ChangeReviewPanel';
 import { ImportPanel } from './components/ImportPanel';
 import { CalendarProvider } from './context/CalendarContext';
@@ -31,6 +32,7 @@ const Layout = () => {
         <Outlet />
       </div>
       <AssignmentPanel />
+      <CreateAssignmentPanel />
       <ImportPanel />
       <ChangeReviewPanel />
     </div>

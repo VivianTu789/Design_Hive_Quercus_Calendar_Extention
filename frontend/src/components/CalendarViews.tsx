@@ -132,8 +132,8 @@ const AssignmentCard = ({ assignment }: { assignment: Assignment }) => {
       borderColor = '#8b5cf6';
       break;
     default:
-      backgroundColor = undefined;
-      borderColor = undefined;
+      backgroundColor = '#f3f4f6'; // neutral gray for no/unknown course
+      borderColor = '#d1d5db';
   }
 
   return (
@@ -152,28 +152,57 @@ const AssignmentCard = ({ assignment }: { assignment: Assignment }) => {
           : undefined
       }
     >
-      <div
-        className="assignment-title"
-        style={isPast ? { textDecoration: 'line-through' } : undefined}
-      >
-        {assignment.title}
+      <div className="assignment-title-row">
+        <div
+          className="assignment-title"
+          style={isPast ? { textDecoration: 'line-through' } : undefined}
+        >
+          {assignment.title}
+        </div>
+        {assignment.status && (
+          <span
+            className="assignment-new-badge"
+            style={{
+              marginLeft: '8px',
+              padding: '2px 6px',
+              borderRadius: '999px',
+              backgroundColor: '#fee2e2',
+              color: '#b91c1c',
+              fontSize: '11px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+            }}
+          >
+            {assignment.status === 'new' ? 'NEW!' : 'CHANGED!'}
+          </span>
+        )}
       </div>
       <div
         className="assignment-meta"
         style={isPast ? { textDecoration: 'line-through' } : undefined}
       >
-        <span>{course?.name ?? 'Unassigned course'}</span>
+        <span>{course?.name ?? 'Uncategorized'}</span>
         <span>
           Due Date: {formatDate(assignment.dueDate)}
           {timeLabel ? ` ${timeLabel}` : ''}
         </span>
+        {assignment.location && assignment.location !== 'None' && (
+          <span>Location: {assignment.location}</span>
+        )}
       </div>
     </button>
   );
 };
 
 export const MonthView = () => {
-  const { currentDate, assignments, navigateMonth, navigateToToday, visibleCourseIds } = useCalendar();
+  const {
+    currentDate,
+    assignments,
+    navigateMonth,
+    navigateToToday,
+    visibleCourseIds,
+    showUncategorized,
+  } = useCalendar();
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -212,7 +241,11 @@ export const MonthView = () => {
 
   const getAssignmentsForDate = (date: Date) => {
     return assignments.filter((assignment) => {
-      if (!visibleCourseIds.includes(assignment.courseId)) return false;
+      if (!assignment.courseId) {
+        if (!showUncategorized) return false;
+      } else if (!visibleCourseIds.includes(assignment.courseId)) {
+        return false;
+      }
       const assignmentDate = new Date(assignment.dueDate);
       return assignmentDate.toDateString() === date.toDateString();
     });
@@ -278,7 +311,14 @@ export const MonthView = () => {
 };
 
 export const WeekView = () => {
-  const { currentDate, assignments, navigateWeek, navigateToToday, visibleCourseIds } = useCalendar();
+  const {
+    currentDate,
+    assignments,
+    navigateWeek,
+    navigateToToday,
+    visibleCourseIds,
+    showUncategorized,
+  } = useCalendar();
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -300,7 +340,11 @@ export const WeekView = () => {
 
   const getAssignmentsForDate = (date: Date) => {
     return assignments.filter((assignment) => {
-      if (!visibleCourseIds.includes(assignment.courseId)) return false;
+      if (!assignment.courseId) {
+        if (!showUncategorized) return false;
+      } else if (!visibleCourseIds.includes(assignment.courseId)) {
+        return false;
+      }
       const assignmentDate = new Date(assignment.dueDate);
       return assignmentDate.toDateString() === date.toDateString();
     });
@@ -359,11 +403,22 @@ export const WeekView = () => {
 };
 
 export const DayView = () => {
-  const { currentDate, assignments, navigateDay, navigateToToday, visibleCourseIds } = useCalendar();
+  const {
+    currentDate,
+    assignments,
+    navigateDay,
+    navigateToToday,
+    visibleCourseIds,
+    showUncategorized,
+  } = useCalendar();
 
   const getAssignmentsForDate = (date: Date) => {
     return assignments.filter((assignment) => {
-      if (!visibleCourseIds.includes(assignment.courseId)) return false;
+      if (!assignment.courseId) {
+        if (!showUncategorized) return false;
+      } else if (!visibleCourseIds.includes(assignment.courseId)) {
+        return false;
+      }
       const assignmentDate = new Date(assignment.dueDate);
       return assignmentDate.toDateString() === date.toDateString();
     });

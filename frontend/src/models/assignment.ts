@@ -11,5 +11,9 @@ export interface Assignment {
   courseId: string;
   // Link back to the source assignment in the LMS or app.
   assignmentLink?: string;
+  // Optional location for the event/assignment.
+  location?: string;
+  // Visual status badge in the calendar.
+  status?: 'new' | 'changed';
 }
 

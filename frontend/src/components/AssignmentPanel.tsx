@@ -73,7 +73,12 @@ export const AssignmentPanel = () => {
 
   const handleSave = () => {
     if (draft) {
-      updateAssignment(draft);
+      const deadlineChanged =
+        draft.dueDate !== selected.dueDate || draft.dueTime !== selected.dueTime;
+      updateAssignment({
+        ...draft,
+        status: deadlineChanged ? 'changed' : draft.status,
+      });
       setIsEditing(false);
     }
   };
@@ -153,6 +158,12 @@ export const AssignmentPanel = () => {
                 {formattedDueDate} {formattedDueTime}
               </span>
             </div>
+            {selected.location && selected.location !== 'None' && !isEditing && (
+              <div className="assignment-panel-meta">
+                <span>Location:</span>
+                <span>{selected.location}</span>
+              </div>
+            )}
           </div>
         </div>
         <section className="modal-body">
@@ -193,6 +204,16 @@ export const AssignmentPanel = () => {
                   id="description"
                   value={draft?.description ?? ''}
                   onChange={(e) => handleFieldChange('description', e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="location">Location (optional)</label>
+                <input
+                  id="location"
+                  type="text"
+                  placeholder="None"
+                  value={draft?.location ?? ''}
+                  onChange={(e) => handleFieldChange('location', e.target.value)}
                 />
               </div>
               <div className="field">

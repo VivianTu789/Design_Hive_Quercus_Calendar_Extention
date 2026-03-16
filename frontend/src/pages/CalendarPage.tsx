@@ -45,8 +45,60 @@ const ImportButton = () => {
   );
 };
 
+const CreateAssignmentButton = () => {
+  const { openCreate } = useCalendar();
+  return (
+    <button
+      type="button"
+      className="primary"
+      onClick={openCreate}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+      }}
+    >
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '16px',
+          height: '16px',
+          borderRadius: '999px',
+          backgroundColor: 'white',
+          color: '#0b3b76',
+          fontWeight: 700,
+          fontSize: '13px',
+        }}
+      >
+        +
+      </span>
+      <span>New Event</span>
+    </button>
+  );
+};
+
+const MarkAllSeenButton = () => {
+  const { markAllSeen } = useCalendar();
+  return (
+    <button
+      type="button"
+      className="ghost"
+      onClick={markAllSeen}
+      style={{
+        border: '1px solid #d1d5db',
+        color: '#4b5563',
+      }}
+    >
+      Mark all as seen
+    </button>
+  );
+};
+
 export const CalendarPage = () => {
-  const { courses, visibleCourseIds, setVisibleCourseIds } = useCalendar();
+  const { courses, visibleCourseIds, setVisibleCourseIds, showUncategorized, setShowUncategorized } =
+    useCalendar();
   const [isCalendarsOpen, setIsCalendarsOpen] = useState(false);
 
   const toggleCourse = (courseId: string) => {
@@ -64,11 +116,21 @@ export const CalendarPage = () => {
           <h1>Calendar</h1>
           <p>High-fidelity prototype calendar with fake data.</p>
         </div>
-        <div className="header-actions">
-          <CalendarViewSwitcher />
-          <ImportButton />
-        </div>
       </header>
+      <div
+        className="header-actions"
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '8px',
+          marginBottom: '12px',
+        }}
+      >
+        <CalendarViewSwitcher />
+        <ImportButton />
+        <CreateAssignmentButton />
+        <MarkAllSeenButton />
+      </div>
       <CalendarContent />
       <section className="calendars-panel" style={{ marginTop: '16px' }}>
         <button
@@ -99,6 +161,28 @@ export const CalendarPage = () => {
               gap: '6px',
             }}
           >
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px',
+                color: '#111827',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={showUncategorized}
+                onChange={(e) => setShowUncategorized(e.target.checked)}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  accentColor: '#6b7280',
+                  cursor: 'pointer',
+                }}
+              />
+              <span>Uncategorized</span>
+            </label>
             {courses.map((course) => {
               const checked = visibleCourseIds.includes(course.id);
               const color = getCourseColor(course.id);
