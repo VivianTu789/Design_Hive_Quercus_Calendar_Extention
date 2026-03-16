@@ -1,5 +1,4 @@
 import { Link, Outlet } from 'react-router-dom';
-import { Gauge, CalendarDays } from 'lucide-react';
 import { AssignmentPanel } from './components/AssignmentPanel';
 import { ChangeReviewPanel } from './components/ChangeReviewPanel';
 import { ImportPanel } from './components/ImportPanel';
@@ -16,13 +15,13 @@ const Layout = () => {
         <ul>
           <li>
             <Link to="/dashboard">
-              <Gauge size={22} strokeWidth={1.75} />
+              <img src="/icon-gauge.svg" alt="Dashboard Icon" width={22} height={22} />
               <span className="nav-label">Dashboard</span>
             </Link>
           </li>
           <li>
             <Link to="/calendar">
-              <CalendarDays size={22} strokeWidth={1.75} />
+              <img src="/icon-calendar-days.svg" alt="Calendar Icon" width={22} height={22} />
               <span className="nav-label">Calendar</span>
             </Link>
           </li>
