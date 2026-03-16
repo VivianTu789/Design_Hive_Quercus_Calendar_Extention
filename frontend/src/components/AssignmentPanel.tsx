@@ -10,6 +10,9 @@ export const AssignmentPanel = () => {
     closeAssignment,
     updateAssignment,
     deleteAssignment,
+    reopenImportAfterAssignmentClose,
+    openImport,
+    setReopenImportAfterAssignmentClose,
   } = useCalendar();
 
   const selected = useMemo(
@@ -80,12 +83,20 @@ export const AssignmentPanel = () => {
         status: deadlineChanged ? 'changed' : draft.status,
       });
       setIsEditing(false);
+      if (reopenImportAfterAssignmentClose) {
+        setReopenImportAfterAssignmentClose(false);
+        openImport();
+      }
     }
   };
 
   const handleDelete = () => {
     deleteAssignment(selected.id);
     closeAssignment();
+    if (reopenImportAfterAssignmentClose) {
+      setReopenImportAfterAssignmentClose(false);
+      openImport();
+    }
   };
 
   const handleClose = () => {
@@ -94,6 +105,10 @@ export const AssignmentPanel = () => {
     setDragging(false);
     setPosition({ x: 0, y: 0 });
     closeAssignment();
+    if (reopenImportAfterAssignmentClose) {
+      setReopenImportAfterAssignmentClose(false);
+      openImport();
+    }
   };
 
   const handleDragStart = (event: React.MouseEvent<HTMLDivElement>) => {

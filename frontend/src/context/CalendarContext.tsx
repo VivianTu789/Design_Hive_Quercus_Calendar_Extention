@@ -16,6 +16,7 @@ interface CalendarState {
   isChangeReviewOpen: boolean;
   isCreateOpen: boolean;
   showChangeAlert: boolean;
+  reopenImportAfterAssignmentClose: boolean;
 }
 
 interface CalendarContextValue extends CalendarState {
@@ -43,6 +44,7 @@ interface CalendarContextValue extends CalendarState {
   closeChangeReview: () => void;
   openCreate: () => void;
   closeCreate: () => void;
+  setReopenImportAfterAssignmentClose: (value: boolean) => void;
 }
 
 const STORAGE_KEY = 'calendar_prototype_state_v2';
@@ -80,9 +82,6 @@ const normalizeAssignment = (assignment: Partial<Assignment>): Assignment => {
 
 const getDefaultState = (): CalendarState => {
   const courses: Course[] = [
-    { id: 'course-1', name: 'COMP 101' },
-    { id: 'course-2', name: 'MATH 202' },
-    { id: 'course-3', name: 'HIST 210' },
     { id: 'course-4', name: 'ECE496 - Design Project' },
     { id: 'course-5', name: 'JRE420 - Organizational Behavior' },
     { id: 'course-6', name: 'CSC318 - Interactive Computational Media' },
@@ -295,6 +294,7 @@ const getDefaultState = (): CalendarState => {
     isChangeReviewOpen: false,
     isCreateOpen: false,
     showChangeAlert: true,
+    reopenImportAfterAssignmentClose: false,
   };
 };
 
@@ -316,7 +316,14 @@ const loadPersistedState = (): CalendarState => {
       assignments: Array.isArray(parsed.assignments)
         ? parsed.assignments.map((a) => normalizeAssignment(a))
         : fallback.assignments,
-      courses: Array.isArray(parsed.courses) ? parsed.courses : fallback.courses,
+      courses: (() => {
+        const savedCourses = Array.isArray(parsed.courses) ? parsed.courses : [];
+        const merged = new Map<string, Course>();
+        // Keep defaults, but allow saved state to override or add new
+        fallback.courses.forEach((c) => merged.set(c.id, c));
+        savedCourses.forEach((c) => merged.set(c.id, c));
+        return Array.from(merged.values());
+      })(),
       visibleCourseIds: Array.isArray(parsed.visibleCourseIds)
         ? parsed.visibleCourseIds
         : fallback.visibleCourseIds,
@@ -329,6 +336,7 @@ const loadPersistedState = (): CalendarState => {
       isChangeReviewOpen: false,
       isCreateOpen: false,
       showChangeAlert: true,
+      reopenImportAfterAssignmentClose: false,
     };
   } catch {
     return fallback;
@@ -411,6 +419,7 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
       closeChangeReview: () => setState((s) => ({ ...s, isChangeReviewOpen: false })),
       openCreate: () => setState((s) => ({ ...s, isCreateOpen: true })),
       closeCreate: () => setState((s) => ({ ...s, isCreateOpen: false })),
+      setReopenImportAfterAssignmentClose: (value) => setState((s) => ({ ...s, reopenImportAfterAssignmentClose: value })),
       markAllSeen: () =>
         setState((s) => ({
           ...s,
