@@ -262,7 +262,7 @@ const IMPORT_ASSIGNMENTS: Assignment[] = [
 ];
 
 export const ImportPanel = () => {
-  const { assignments, courses, isImportOpen, closeImport, addAssignment } = useCalendar();
+  const { assignments, courses, isImportOpen, closeImport, openAssignment, setReopenImportAfterAssignmentClose, addAssignment } = useCalendar();
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
   const [showHelp, setShowHelp] = useState(false);
@@ -540,14 +540,25 @@ export const ImportPanel = () => {
                       </div>
                       <span>{new Date(assignment.dueDate).toLocaleDateString()}</span>
                       <span>{assignment.dueTime}</span>
-                      <a
-                        href="https://example.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ color: courseColor, textDecoration: 'none' }}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeImport();
+                          setReopenImportAfterAssignmentClose(true);
+                          openAssignment(assignment.id);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          color: courseColor,
+                          textDecoration: 'underline',
+                          fontSize: 'inherit',
+                        }}
                       >
                         View
-                      </a>
+                      </button>
                     </label>
                   );
                 })}

@@ -16,6 +16,7 @@ interface CalendarState {
   isChangeReviewOpen: boolean;
   isCreateOpen: boolean;
   showChangeAlert: boolean;
+  reopenImportAfterAssignmentClose: boolean;
 }
 
 interface CalendarContextValue extends CalendarState {
@@ -43,6 +44,7 @@ interface CalendarContextValue extends CalendarState {
   closeChangeReview: () => void;
   openCreate: () => void;
   closeCreate: () => void;
+  setReopenImportAfterAssignmentClose: (value: boolean) => void;
 }
 
 const STORAGE_KEY = 'calendar_prototype_state_v2';
@@ -295,6 +297,7 @@ const getDefaultState = (): CalendarState => {
     isChangeReviewOpen: false,
     isCreateOpen: false,
     showChangeAlert: true,
+    reopenImportAfterAssignmentClose: false,
   };
 };
 
@@ -336,6 +339,7 @@ const loadPersistedState = (): CalendarState => {
       isChangeReviewOpen: false,
       isCreateOpen: false,
       showChangeAlert: true,
+      reopenImportAfterAssignmentClose: false,
     };
   } catch {
     return fallback;
@@ -418,6 +422,7 @@ export const CalendarProvider = ({ children }: { children: ReactNode }) => {
       closeChangeReview: () => setState((s) => ({ ...s, isChangeReviewOpen: false })),
       openCreate: () => setState((s) => ({ ...s, isCreateOpen: true })),
       closeCreate: () => setState((s) => ({ ...s, isCreateOpen: false })),
+      setReopenImportAfterAssignmentClose: (value) => setState((s) => ({ ...s, reopenImportAfterAssignmentClose: value })),
       markAllSeen: () =>
         setState((s) => ({
           ...s,
