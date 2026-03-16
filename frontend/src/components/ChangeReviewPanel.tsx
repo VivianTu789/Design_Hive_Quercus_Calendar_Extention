@@ -43,10 +43,6 @@ export const ChangeReviewPanel = () => {
     closeChangeReview();
   };
 
-  const handleRestore = () => {
-    setNewDueDate(defaultDueDate);
-  };
-
   return (
     <div className="modal-backdrop">
       <div className="modal">

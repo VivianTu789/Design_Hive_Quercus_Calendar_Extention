@@ -316,7 +316,14 @@ const loadPersistedState = (): CalendarState => {
       assignments: Array.isArray(parsed.assignments)
         ? parsed.assignments.map((a) => normalizeAssignment(a))
         : fallback.assignments,
-      courses: Array.isArray(parsed.courses) ? parsed.courses : fallback.courses,
+      courses: (() => {
+        const savedCourses = Array.isArray(parsed.courses) ? parsed.courses : [];
+        const merged = new Map<string, Course>();
+        // Keep defaults, but allow saved state to override or add new
+        fallback.courses.forEach((c) => merged.set(c.id, c));
+        savedCourses.forEach((c) => merged.set(c.id, c));
+        return Array.from(merged.values());
+      })(),
       visibleCourseIds: Array.isArray(parsed.visibleCourseIds)
         ? parsed.visibleCourseIds
         : fallback.visibleCourseIds,
