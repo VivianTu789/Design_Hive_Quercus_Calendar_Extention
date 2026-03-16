@@ -265,6 +265,7 @@ export const ImportPanel = () => {
   const { assignments, courses, isImportOpen, closeImport, addAssignment } = useCalendar();
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
+  const [showHelp, setShowHelp] = useState(false);
 
   if (!isImportOpen) return null;
   const groups = groupByCourse(IMPORT_ASSIGNMENTS, courses);
@@ -332,33 +333,58 @@ export const ImportPanel = () => {
   return (
     <div className="modal-backdrop">
       <div className="modal large">
-        <header className="modal-header" style={{
-          backgroundColor: '#0b3b76',
-          color: 'white',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: '16px 24px',
-          position: 'relative',
-          borderRadius: '12px 12px 0 0'
-        }}>
-        <h2 style={{ 
-          margin: 0, 
-          fontSize: '24px', 
-          // fontWeight: 'bold',
-          textAlign: 'center',
-          flex: 1,
-          color: 'white' 
-        }}>Import Details</h2>
-          <button type="button" className="close-btn" onClick={closeImport}
-          style={{ 
-            background: 'none', 
-            border: 'none', 
-            fontSize: '28px', 
-            color: 'white', 
-            cursor: 'pointer' 
-          }}>
-            X
+        <header
+          className="modal-header"
+          style={{
+            backgroundColor: '#0b3b76',
+            color: 'white',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '16px 24px',
+            position: 'relative',
+            borderRadius: '12px 12px 0 0',
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: '24px',
+              textAlign: 'center',
+              flex: 1,
+              color: 'white',
+            }}
+          >
+            Import Details
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowHelp(true)}
+            style={{
+              position: 'absolute',
+              left: '16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '28px',
+              height: '28px',
+              borderRadius: '999px',
+              border: '1px solid rgba(255,255,255,0.8)',
+              backgroundColor: 'transparent',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '16px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              lineHeight: 1,
+            }}
+            aria-label="Import help"
+          >
+            ?
+          </button>
+          <button type="button" className="close-button" onClick={closeImport} aria-label="Close">
+            ×
           </button>
         </header>
         {/* <section className="modal-body">
@@ -415,72 +441,116 @@ export const ImportPanel = () => {
           {/* Course Groups with Dropdown */}
           {groups.map((group) => {
             const courseColor = getCourseColor(group.courseId);
+            const allSelected = group.assignments.every((a) => selectedAssignments.has(a.id));
 
             return (
              <div key={group.courseId} className="course-section">
               {/* Course Row Header */}
-              <div className="course-header" style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px 0',
-                borderBottom: '1px solid #e5e7eb',
-                cursor: 'pointer'
-              }} onClick={() => toggleCourse(group.courseId)}>
+              <div
+                className="course-header"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 0',
+                  borderBottom: '1px solid #e5e7eb',
+                }}
+              >
                 <input 
                   type="checkbox" 
-                  checked={group.assignments.every(a => selectedAssignments.has(a.id))}
+                  checked={allSelected}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      group.assignments.forEach(a => setSelectedAssignments(prev => new Set(prev).add(a.id)));
+                      group.assignments.forEach((a) =>
+                        setSelectedAssignments((prev) => new Set(prev).add(a.id)),
+                      );
                     } else {
-                      group.assignments.forEach(a => setSelectedAssignments(prev => {
-                        const next = new Set(prev);
-                        next.delete(a.id);
-                        return next;
-                      }));
+                      group.assignments.forEach((a) =>
+                        setSelectedAssignments((prev) => {
+                          const next = new Set(prev);
+                          next.delete(a.id);
+                          return next;
+                        }),
+                      );
                     }
                   }}
-                  style={{ width: '20px', height: '20px', accentColor: courseColor }}
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    accentColor: allSelected ? courseColor : '#0b3b76',
+                    borderColor: allSelected ? courseColor : '#bfdbfe',
+                  }}
                 />
                 <span style={{ fontWeight: '600', color: courseColor }}>{group.courseName}</span>
-                <span style={{marginLeft: 'auto', fontSize: '30px', fontWeight: 'bold'}}>{expandedCourses.has(group.courseId) ? '▾' : '▸'}</span>
+                <button
+                  type="button"
+                  style={{
+                    marginLeft: 'auto',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '999px',
+                    backgroundColor: '#e5f0ff',
+                    color: '#0b3b76',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid #bfdbfe',
+                  }}
+                  onClick={() => toggleCourse(group.courseId)}
+                >
+                  {expandedCourses.has(group.courseId) ? '▾' : '▸'}
+                </button>
               </div>
 
               {/* Expandable Assignments Table Rows */}
-              {expandedCourses.has(group.courseId) && group.assignments.map((assignment) => (
-                <label key={assignment.id} className="assignment-row" style={{
-                  display: 'grid',
-                  gridTemplateColumns: '120px 1fr 100px 80px 80px',
-                  gap: '12px',
-                  alignItems: 'center',
-                  padding: '12px 0',
-                  borderBottom: '1px solid #f3f4f6'
-                }}>
-                  {/* spacer to indent relative to course checkbox */}
-                  <span />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedAssignments.has(assignment.id)}
-                      onChange={() => toggleAssignment(assignment.id)}
-                      style={{ width: '20px', height: '20px', accentColor: courseColor }}
-                    />
-                    <span style={{ fontWeight: '500' }}>{assignment.title}</span>
-                  </div>
-                  <span>{new Date(assignment.dueDate).toLocaleDateString()}</span>
-                  <span>{assignment.dueTime}</span>
-                  <a
-                    href="https://example.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: courseColor, textDecoration: 'none' }}
-                  >
-                    View
-                  </a>
-                </label>
-              ))}
+              {expandedCourses.has(group.courseId) &&
+                group.assignments.map((assignment) => {
+                  const isChecked = selectedAssignments.has(assignment.id);
+                  return (
+                    <label
+                      key={assignment.id}
+                      className="assignment-row"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '120px 1fr 100px 80px 80px',
+                        gap: '12px',
+                        alignItems: 'center',
+                        padding: '12px 0',
+                        borderBottom: '1px solid #f3f4f6',
+                      }}
+                    >
+                      {/* spacer to indent relative to course checkbox */}
+                      <span />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleAssignment(assignment.id)}
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            accentColor: isChecked ? courseColor : '#0b3b76',
+                            borderColor: isChecked ? courseColor : '#bfdbfe',
+                          }}
+                        />
+                        <span style={{ fontWeight: '500' }}>{assignment.title}</span>
+                      </div>
+                      <span>{new Date(assignment.dueDate).toLocaleDateString()}</span>
+                      <span>{assignment.dueTime}</span>
+                      <a
+                        href="https://example.com"
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: courseColor, textDecoration: 'none' }}
+                      >
+                        View
+                      </a>
+                    </label>
+                  );
+                })}
             </div>
           );
         })}
@@ -491,6 +561,36 @@ export const ImportPanel = () => {
           </button>
         </footer>
       </div>
+      {showHelp && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <header className="modal-header">
+              <h2>Import Help</h2>
+              <button type="button" className="close-button" onClick={() => setShowHelp(false)} aria-label="Close">
+                ×
+              </button>
+            </header>
+            <section className="modal-body">
+              <p>
+                To import deadlines from your course syllabus into the calendar that are not included
+                by default, you can select the specific items you want to bring in.
+              </p>
+              <p>
+                Use the checkboxes next to each assignment to import individual deadlines, or use
+                the checkbox in the course header to include all assignments for that course.
+              </p>
+              <p>
+                You can expand or collapse a course to see its assignments by clicking the course
+                header or the expand arrow.
+              </p>
+              <p>
+                When you are satisfied with your selections, press the <strong>Confirm</strong>{' '}
+                button to finalize the import and add the selected deadlines to your calendar.
+              </p>
+            </section>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
