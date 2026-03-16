@@ -98,14 +98,70 @@ const AssignmentCard = ({ assignment }: { assignment: Assignment }) => {
   const { openAssignment, courses } = useCalendar();
   const course = courses.find((c) => c.id === assignment.courseId);
   const timeLabel = formatTime(assignment.dueTime, assignment.dueDate);
+
+  // Determine if this assignment is in the past relative to today (by date)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const assignmentDate = new Date(assignment.dueDate);
+  assignmentDate.setHours(0, 0, 0, 0);
+  const isPast = assignmentDate < today;
+
+  // Color-code by course
+  let backgroundColor: string | undefined;
+  let borderColor: string | undefined;
+
+  switch (assignment.courseId) {
+    case 'course-6': // CSC318
+      backgroundColor = '#ecfdf3'; // soft green
+      borderColor = '#22c55e';
+      break;
+    case 'course-5': // JRE420
+      backgroundColor = '#fff7ed'; // soft orange
+      borderColor = '#fb923c';
+      break;
+    case 'course-7': // ECE568
+      backgroundColor = '#fdf2f8'; // soft pink
+      borderColor = '#ec4899';
+      break;
+    case 'course-8': // ECE316
+      backgroundColor = '#eff6ff'; // soft blue
+      borderColor = '#3b82f6';
+      break;
+    case 'course-4': // ECE496
+      backgroundColor = '#f5f3ff'; // soft purple
+      borderColor = '#8b5cf6';
+      break;
+    default:
+      backgroundColor = undefined;
+      borderColor = undefined;
+  }
+
   return (
     <button
       type="button"
       className="assignment-card"
       onClick={() => openAssignment(assignment.id)}
+      style={
+        backgroundColor
+          ? {
+              backgroundColor,
+              borderColor: borderColor ?? 'transparent',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+            }
+          : undefined
+      }
     >
-      <div className="assignment-title">{assignment.title}</div>
-      <div className="assignment-meta">
+      <div
+        className="assignment-title"
+        style={isPast ? { textDecoration: 'line-through' } : undefined}
+      >
+        {assignment.title}
+      </div>
+      <div
+        className="assignment-meta"
+        style={isPast ? { textDecoration: 'line-through' } : undefined}
+      >
         <span>{course?.name ?? 'Unassigned course'}</span>
         <span>
           Due Date: {formatDate(assignment.dueDate)}
@@ -117,7 +173,10 @@ const AssignmentCard = ({ assignment }: { assignment: Assignment }) => {
 };
 
 export const MonthView = () => {
-  const { currentDate, assignments, navigateMonth, navigateToToday } = useCalendar();
+  const { currentDate, assignments, navigateMonth, navigateToToday, visibleCourseIds } = useCalendar();
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -127,7 +186,7 @@ export const MonthView = () => {
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
-    const days = [];
+    const days: (Date | null)[] = [];
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
@@ -139,11 +198,21 @@ export const MonthView = () => {
       days.push(new Date(year, month, day));
     }
 
+    // Fill the remaining cells of the last week with days from the next month
+    const remainder = days.length % 7;
+    if (remainder !== 0) {
+      const daysToAdd = 7 - remainder;
+      for (let i = 1; i <= daysToAdd; i++) {
+        days.push(new Date(year, month, daysInMonth + i));
+      }
+    }
+
     return days;
   };
 
   const getAssignmentsForDate = (date: Date) => {
-    return assignments.filter(assignment => {
+    return assignments.filter((assignment) => {
+      if (!visibleCourseIds.includes(assignment.courseId)) return false;
       const assignmentDate = new Date(assignment.dueDate);
       return assignmentDate.toDateString() === date.toDateString();
     });
@@ -170,30 +239,49 @@ export const MonthView = () => {
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div key={day} className="day-header">{day}</div>
         ))}
-        {days.map((date, index) => (
-          <div key={index} className={`day-cell ${date ? '' : 'empty'}`}>
-            {date && (
-              <>
-                <div className="day-number">{date.getDate()}</div>
-                <div className="day-assignments">
-                  {getAssignmentsForDate(date).slice(0, 3).map(assignment => (
-                    <AssignmentCard key={assignment.id} assignment={assignment} />
-                  ))}
-                  {getAssignmentsForDate(date).length > 3 && (
-                    <div className="more-assignments">+{getAssignmentsForDate(date).length - 3} more</div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        ))}
+        {days.map((date, index) => {
+          const isToday =
+            date !== null &&
+            (() => {
+              const d = new Date(date);
+              d.setHours(0, 0, 0, 0);
+              return d.getTime() === today.getTime();
+            })();
+
+          return (
+            <div
+              key={index}
+              className={`day-cell ${date ? '' : 'empty'}`}
+              style={isToday ? { backgroundColor: '#f3f4f6' } : undefined}
+            >
+              {date && (
+                <>
+                  <div className="day-number">{date.getDate()}</div>
+                  <div className="day-assignments">
+                    {getAssignmentsForDate(date).slice(0, 3).map((assignment) => (
+                      <AssignmentCard key={assignment.id} assignment={assignment} />
+                    ))}
+                    {getAssignmentsForDate(date).length > 3 && (
+                      <div className="more-assignments">
+                        +{getAssignmentsForDate(date).length - 3} more
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
 
 export const WeekView = () => {
-  const { currentDate, assignments, navigateWeek, navigateToToday } = useCalendar();
+  const { currentDate, assignments, navigateWeek, navigateToToday, visibleCourseIds } = useCalendar();
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const getWeekDays = (date: Date) => {
     const startOfWeek = new Date(date);
@@ -211,7 +299,8 @@ export const WeekView = () => {
   };
 
   const getAssignmentsForDate = (date: Date) => {
-    return assignments.filter(assignment => {
+    return assignments.filter((assignment) => {
+      if (!visibleCourseIds.includes(assignment.courseId)) return false;
       const assignmentDate = new Date(assignment.dueDate);
       return assignmentDate.toDateString() === date.toDateString();
     });
@@ -237,29 +326,44 @@ export const WeekView = () => {
         </div>
       </div>
       <div className="calendar-grid week-grid">
-        {weekDays.map((date, index) => (
-          <div key={index} className="day-column">
-            <div className="day-header">
-              <div className="day-name">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]}</div>
-              <div className="day-number">{date.getDate()}</div>
+        {weekDays.map((date, index) => {
+          const isToday = (() => {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            return d.getTime() === today.getTime();
+          })();
+
+          return (
+            <div
+              key={index}
+              className="day-column"
+              style={isToday ? { backgroundColor: '#f3f4f6' } : undefined}
+            >
+              <div className="day-header">
+                <div className="day-name">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]}
+                </div>
+                <div className="day-number">{date.getDate()}</div>
+              </div>
+              <div className="day-assignments">
+                {getAssignmentsForDate(date).map((assignment) => (
+                  <AssignmentCard key={assignment.id} assignment={assignment} />
+                ))}
+              </div>
             </div>
-            <div className="day-assignments">
-              {getAssignmentsForDate(date).map(assignment => (
-                <AssignmentCard key={assignment.id} assignment={assignment} />
-              ))}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 };
 
 export const DayView = () => {
-  const { currentDate, assignments, navigateDay, navigateToToday } = useCalendar();
+  const { currentDate, assignments, navigateDay, navigateToToday, visibleCourseIds } = useCalendar();
 
   const getAssignmentsForDate = (date: Date) => {
-    return assignments.filter(assignment => {
+    return assignments.filter((assignment) => {
+      if (!visibleCourseIds.includes(assignment.courseId)) return false;
       const assignmentDate = new Date(assignment.dueDate);
       return assignmentDate.toDateString() === date.toDateString();
     });

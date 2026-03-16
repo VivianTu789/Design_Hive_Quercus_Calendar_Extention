@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import type { Assignment } from '../models/assignment';
 
@@ -10,6 +10,7 @@ interface CourseGroup {
 
 const groupByCourse = (assignments: Assignment[], courses: { id: string; name: string }[]) => {
   const map = new Map<string, CourseGroup>();
+
   for (const assignment of assignments) {
     const course = courses.find((c) => c.id === assignment.courseId);
     const id = course?.id ?? 'unknown';
@@ -19,37 +20,247 @@ const groupByCourse = (assignments: Assignment[], courses: { id: string; name: s
     }
     map.get(id)!.assignments.push(assignment);
   }
-  return Array.from(map.values());
+
+  // Sort assignments within each course by due date (earliest first), then time.
+  const groups = Array.from(map.values());
+  groups.forEach((group) => {
+    group.assignments.sort((a, b) => {
+      const aDate = new Date(a.dueDate).getTime();
+      const bDate = new Date(b.dueDate).getTime();
+      if (aDate !== bDate) return aDate - bDate;
+
+      const aTime = a.dueTime ?? '23:59';
+      const bTime = b.dueTime ?? '23:59';
+      return aTime.localeCompare(bTime);
+    });
+  });
+
+  return groups;
 };
+
+// Static import catalog: assignments that are available via the Import Panel.
+const IMPORT_ASSIGNMENTS: Assignment[] = [
+  // ECE496 - Design Project
+  {
+    id: 'imp-ece496-final-report',
+    title: 'Final Report',
+    description: 'ECE496 final design project report.',
+    dueDate: new Date(new Date().getFullYear(), 2, 21, 23, 59).toISOString(),
+    dueTime: '23:59',
+    courseId: 'course-4',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-ece496-design-fair',
+    title: 'Design Fair',
+    description: 'ECE496 design fair presentation.',
+    dueDate: new Date(new Date().getFullYear(), 2, 25, 23, 59).toISOString(),
+    dueTime: '23:59',
+    courseId: 'course-4',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-ece496-final-design-review',
+    title: 'Final Design Review with Supervisor',
+    description: 'ECE496 final design review with supervisor.',
+    dueDate: new Date(new Date().getFullYear(), 2, 27, 23, 59).toISOString(), // March 27
+    dueTime: '23:59',
+    courseId: 'course-4',
+    assignmentLink: '',
+  },
+  // JRE420
+  {
+    id: 'imp-jre420-group-report',
+    title: 'Group Report',
+    description: 'JRE420 group report.',
+    dueDate: new Date(new Date().getFullYear(), 2, 26, 18, 0).toISOString(),
+    dueTime: '18:00',
+    courseId: 'course-5',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-jre420-individual-paper',
+    title: 'Individual Paper',
+    description: 'JRE420 individual paper.',
+    dueDate: new Date(new Date().getFullYear(), 2, 12, 18, 0).toISOString(), // March 12
+    dueTime: '18:00',
+    courseId: 'course-5',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-jre420-group-presentation',
+    title: 'Group Presentation',
+    description: 'JRE420 group presentation.',
+    dueDate: new Date(new Date().getFullYear(), 2, 26, 18, 0).toISOString(),
+    dueTime: '18:00',
+    courseId: 'course-5',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-jre420-group-peer-review',
+    title: 'Group Peer Review',
+    description: 'JRE420 group peer review.',
+    dueDate: new Date(new Date().getFullYear(), 3, 2, 23, 59).toISOString(), // April 2
+    dueTime: '23:59',
+    courseId: 'course-5',
+    assignmentLink: '',
+  },
+  // CSC318
+  {
+    id: 'imp-csc318-studio-5',
+    title: 'Studio 5',
+    description: 'CSC318 Studio 5 submission.',
+    dueDate: new Date(new Date().getFullYear(), 2, 16, 9, 0).toISOString(), // March 16 (moved back one day)
+    dueTime: '09:00',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-studio-5-critique',
+    title: 'Studio 5 Critique',
+    description: 'CSC318 Studio 5 critique.',
+    dueDate: new Date(new Date().getFullYear(), 2, 18, 23, 59).toISOString(),
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-g3-contribution-plan',
+    title: 'G3 Contribution Plan',
+    description: 'CSC318 Group 3 contribution plan.',
+    dueDate: new Date(new Date().getFullYear(), 2, 22, 23, 59).toISOString(),
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-g3-high-fidelity-prototype',
+    title: 'G3 - High Fidelity Prototype',
+    description: 'CSC318 G3 high fidelity prototype.',
+    dueDate: new Date(new Date().getFullYear(), 3, 1, 23, 59).toISOString(), // April 1
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-studio-6',
+    title: 'Studio 6',
+    description: 'CSC318 Studio 6.',
+    dueDate: new Date(new Date().getFullYear(), 2, 30, 23, 59).toISOString(), // March 30 (moved back one day)
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-studio-6-critique',
+    title: 'Studio 6 Critique',
+    description: 'CSC318 Studio 6 critique.',
+    dueDate: new Date(new Date().getFullYear(), 3, 1, 23, 59).toISOString(), // April 1
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-studio-4',
+    title: 'Studio 4',
+    description: 'CSC318 Studio 4.',
+    dueDate: new Date(new Date().getFullYear(), 2, 9, 23, 59).toISOString(), // March 9 (moved back one day)
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-studio-4-critique',
+    title: 'Studio 4 Critique',
+    description: 'CSC318 Studio 4 critique.',
+    dueDate: new Date(new Date().getFullYear(), 2, 11, 23, 59).toISOString(), // March 11
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-g2-design-exploration',
+    title: 'G2: Design Exploration',
+    description: 'CSC318 G2 design exploration.',
+    dueDate: new Date(new Date().getFullYear(), 2, 5, 23, 59).toISOString(), // March 5
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-g2-anonymous-feedback',
+    title: 'G2: Anonymous Feedback Form',
+    description: 'CSC318 G2 anonymous feedback form.',
+    dueDate: new Date(new Date().getFullYear(), 2, 6, 23, 59).toISOString(), // March 6
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-csc318-quiz-3',
+    title: 'Quiz 3',
+    description: 'CSC318 Quiz 3.',
+    dueDate: new Date(new Date().getFullYear(), 2, 3, 23, 59).toISOString(), // March 3
+    dueTime: '23:59',
+    courseId: 'course-6',
+    assignmentLink: '',
+  },
+  // ECE568
+  {
+    id: 'imp-ece568-lab-3',
+    title: 'Lab 3',
+    description: 'ECE568 Lab 3.',
+    dueDate: new Date(new Date().getFullYear(), 2, 20, 23, 59).toISOString(), // March 20
+    dueTime: '23:59',
+    courseId: 'course-7', // ECE568
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-ece568-midterm',
+    title: 'Midterm',
+    description: 'ECE568 midterm.',
+    dueDate: new Date(new Date().getFullYear(), 2, 4, 23, 59).toISOString(), // March 4
+    dueTime: '23:59',
+    courseId: 'course-7',
+    assignmentLink: '',
+  },
+  // ECE316
+  {
+    id: 'imp-ece316-term-test-2',
+    title: 'Term Test 2',
+    description: 'ECE316 Term Test 2.',
+    dueDate: new Date(new Date().getFullYear(), 2, 12, 23, 59).toISOString(), // March 12
+    dueTime: '23:59',
+    courseId: 'course-8', // ECE316
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-ece316-lab-4',
+    title: 'Lab 4',
+    description: 'ECE316 Lab 4.',
+    dueDate: new Date(new Date().getFullYear(), 2, 6, 23, 59).toISOString(), // March 6
+    dueTime: '23:59',
+    courseId: 'course-8',
+    assignmentLink: '',
+  },
+  {
+    id: 'imp-ece316-lab-5',
+    title: 'Lab 5',
+    description: 'ECE316 Lab 5.',
+    dueDate: new Date(new Date().getFullYear(), 2, 20, 23, 59).toISOString(), // March 20
+    dueTime: '23:59',
+    courseId: 'course-8',
+    assignmentLink: '',
+  },
+];
 
 export const ImportPanel = () => {
   const { assignments, courses, isImportOpen, closeImport, addAssignment } = useCalendar();
-  const [sourceType, setSourceType] = useState<'quercus' | 'ics' | 'google'>('quercus');
-  const [previewAssignments, setPreviewAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(false);
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [selectedAssignments, setSelectedAssignments] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setPreviewAssignments([
-        {
-          id: 'mock1',
-          title: 'Quercus Assignment 1',
-          description: 'Mock import',
-          dueDate: new Date(Date.now() + 86400000).toISOString(),
-          dueTime: '23:59',
-          courseId: courses[0]?.id || courses[0]?.id || 'course-1',
-          assignmentLink: ''
-        }
-      ]);
-      setLoading(false);
-    }, 500);
-  }, []);
-
   if (!isImportOpen) return null;
-  const groups = previewAssignments.length > 0 ? groupByCourse(previewAssignments, courses) : groupByCourse(assignments, courses);
+  const groups = groupByCourse(IMPORT_ASSIGNMENTS, courses);
 
   const toggleCourse = (courseId: string) => {
     setExpandedCourses((prev) => {
@@ -80,15 +291,33 @@ export const ImportPanel = () => {
       alert('Select assignments to import!');
       return;
     }
-    selectedAssignments.forEach(id => {
-      const toImport = previewAssignments.find(a => a.id === id) || 
-                       assignments.find(a => a.id === id);
-      if (toImport) {
-        addAssignment(toImport);  // adds to calendar + saves localStorage
+
+    let importedCount = 0;
+
+    selectedAssignments.forEach((id) => {
+      const toImport = IMPORT_ASSIGNMENTS.find((a) => a.id === id);
+      if (!toImport) return;
+
+      const alreadyExists = assignments.some(
+        (a) =>
+          a.courseId === toImport.courseId &&
+          a.title === toImport.title &&
+          a.dueDate === toImport.dueDate &&
+          a.dueTime === toImport.dueTime,
+      );
+
+      if (!alreadyExists) {
+        addAssignment(toImport);
+        importedCount += 1;
       }
     });
+
     closeImport();
-    alert(`${selectedAssignments.size} imported successfully!`);
+    alert(
+      importedCount === 0
+        ? 'No new assignments were imported (they already exist in your calendar).'
+        : `${importedCount} assignment${importedCount > 1 ? 's' : ''} imported successfully!`,
+    );
   };
 
   
@@ -191,6 +420,7 @@ export const ImportPanel = () => {
                 <input 
                   type="checkbox" 
                   checked={group.assignments.every(a => selectedAssignments.has(a.id))}
+                  onClick={(e) => e.stopPropagation()}
                   onChange={(e) => {
                     if (e.target.checked) {
                       group.assignments.forEach(a => setSelectedAssignments(prev => new Set(prev).add(a.id)));
@@ -202,6 +432,7 @@ export const ImportPanel = () => {
                       }));
                     }
                   }}
+                  style={{ width: '20px', height: '20px' }}
                 />
                 <span style={{fontWeight: '600', color: '#1e40af'}}>{group.courseName}</span>
                 <span style={{marginLeft: 'auto', fontSize: '30px', fontWeight: 'bold'}}>{expandedCourses.has(group.courseId) ? '▾' : '▸'}</span>
@@ -217,15 +448,27 @@ export const ImportPanel = () => {
                   padding: '12px 0',
                   borderBottom: '1px solid #f3f4f6'
                 }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedAssignments.has(assignment.id)}
-                    onChange={() => toggleAssignment(assignment.id)}
-                  />
-                  <div style={{fontWeight: '500'}}>{assignment.title}</div>
+                  {/* spacer to indent relative to course checkbox */}
+                  <span />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedAssignments.has(assignment.id)}
+                      onChange={() => toggleAssignment(assignment.id)}
+                      style={{ width: '20px', height: '20px' }}
+                    />
+                    <span style={{ fontWeight: '500' }}>{assignment.title}</span>
+                  </div>
                   <span>{new Date(assignment.dueDate).toLocaleDateString()}</span>
                   <span>{assignment.dueTime}</span>
-                  <a href={assignment.assignmentLink} style={{color: '#0b3b76', textDecoration: 'none'}}>View</a>
+                  <a
+                    href="https://example.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: '#0b3b76', textDecoration: 'none' }}
+                  >
+                    View
+                  </a>
                 </label>
               ))}
             </div>
