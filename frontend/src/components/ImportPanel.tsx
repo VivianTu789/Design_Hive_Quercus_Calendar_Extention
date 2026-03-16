@@ -125,7 +125,7 @@ export const ImportPanel = () => {
             X
           </button>
         </header>
-        <section className="modal-body">
+        {/* <section className="modal-body">
           {groups.map((group) => (
             <div key={group.courseId} className="course-group">
               <button
@@ -157,10 +157,83 @@ export const ImportPanel = () => {
               No assignments to import yet. This will list assignments by course in the future.
             </p>
           )}
+        </section> */}
+        <section className="modal-body" style={{padding: '24px'}}>
+          {/* Table Header */}
+          <div className="table-header" style={{
+            display: 'grid',
+            gridTemplateColumns: '120px 1fr 100px 80px 80px',
+            gap: '12px',
+            padding: '12px 0',
+            fontWeight: '600',
+            color: '#374151',
+            borderBottom: '2px solid #e5e7eb'
+          }}>
+            <span>Course</span>
+            <span>Item</span>
+            <span>Due Date</span>
+            <span>Time</span>
+            <span>Details</span>
+          </div>
+
+          {/* Course Groups with Dropdown */}
+          {groups.map((group) => (
+            <div key={group.courseId} className="course-section">
+              {/* Course Row Header */}
+              <div className="course-header" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 0',
+                borderBottom: '1px solid #e5e7eb',
+                cursor: 'pointer'
+              }} onClick={() => toggleCourse(group.courseId)}>
+                <input 
+                  type="checkbox" 
+                  checked={group.assignments.every(a => selectedAssignments.has(a.id))}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      group.assignments.forEach(a => setSelectedAssignments(prev => new Set(prev).add(a.id)));
+                    } else {
+                      group.assignments.forEach(a => setSelectedAssignments(prev => {
+                        const next = new Set(prev);
+                        next.delete(a.id);
+                        return next;
+                      }));
+                    }
+                  }}
+                />
+                <span style={{fontWeight: '600', color: '#1e40af'}}>{group.courseName}</span>
+                <span style={{marginLeft: 'auto', fontSize: '30px', fontWeight: 'bold'}}>{expandedCourses.has(group.courseId) ? '▾' : '▸'}</span>
+              </div>
+
+              {/* Expandable Assignments Table Rows */}
+              {expandedCourses.has(group.courseId) && group.assignments.map((assignment) => (
+                <label key={assignment.id} className="assignment-row" style={{
+                  display: 'grid',
+                  gridTemplateColumns: '120px 1fr 100px 80px 80px',
+                  gap: '12px',
+                  alignItems: 'center',
+                  padding: '12px 0',
+                  borderBottom: '1px solid #f3f4f6'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedAssignments.has(assignment.id)}
+                    onChange={() => toggleAssignment(assignment.id)}
+                  />
+                  <div style={{fontWeight: '500'}}>{assignment.title}</div>
+                  <span>{new Date(assignment.dueDate).toLocaleDateString()}</span>
+                  <span>{assignment.dueTime}</span>
+                  <a href={assignment.assignmentLink} style={{color: '#0b3b76', textDecoration: 'none'}}>View</a>
+                </label>
+              ))}
+            </div>
+          ))}
         </section>
         <footer className="modal-footer">
           <button type="button" className="primary" onClick={handleImport}>
-            Import selected
+            Confirm
           </button>
         </footer>
       </div>
