@@ -82,9 +82,6 @@ const normalizeAssignment = (assignment: Partial<Assignment>): Assignment => {
 
 const getDefaultState = (): CalendarState => {
   const courses: Course[] = [
-    { id: 'course-1', name: 'COMP 101' },
-    { id: 'course-2', name: 'MATH 202' },
-    { id: 'course-3', name: 'HIST 210' },
     { id: 'course-4', name: 'ECE496 - Design Project' },
     { id: 'course-5', name: 'JRE420 - Organizational Behavior' },
     { id: 'course-6', name: 'CSC318 - Interactive Computational Media' },
