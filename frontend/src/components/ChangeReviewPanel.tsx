@@ -13,19 +13,32 @@ export const ChangeReviewPanel = () => {
   const target = assignments[0];
   const [newDueDate, setNewDueDate] = useState<string>('');
   const [defaultDueDate, setDefaultDueDate] = useState<string>('');
+  const [newLocation, setNewLocation] = useState<string>('');
+  const [defaultLocation, setDefaultLocation] = useState<string>('');
 
   useEffect(() => {
     if (!isChangeReviewOpen || !target) return;
     const suggested = getSuggestedDate();
     setNewDueDate(suggested);
     setDefaultDueDate(suggested);
+
+    // Suggest a new location change for the example alert.
+    const currentLocation = target.location ?? 'Room 101';
+    const suggestedLocation = currentLocation === 'Online' ? 'Room 202' : 'Online';
+    setNewLocation(suggestedLocation);
+    setDefaultLocation(suggestedLocation);
   }, [isChangeReviewOpen, target]);
 
   if (!isChangeReviewOpen || !target) return null;
 
   const handleConfirm = () => {
     const iso = new Date(newDueDate).toISOString();
-    updateAssignment({ ...target, dueDate: iso, status: 'changed' });
+    updateAssignment({
+      ...target,
+      dueDate: iso,
+      location: newLocation,
+      status: 'changed',
+    });
     hideChangeAlert();
     closeChangeReview();
   };
@@ -62,6 +75,9 @@ export const ChangeReviewPanel = () => {
               timeStyle: 'short',
             })}
           </p>
+          <p>
+            <strong>Former location:</strong> {target.location ?? 'Room 101'}
+          </p>
           <div className="field">
             <label className="field-label-prominent">Source of Change</label>
             <p>
@@ -76,6 +92,22 @@ export const ChangeReviewPanel = () => {
             </p>
           </div>
           <div className="field">
+            <label htmlFor="newLocation" className="field-label-prominent">
+              New location
+            </label>
+            <div className="field-row">
+              <input
+                id="newLocation"
+                type="text"
+                value={newLocation}
+                onChange={(e) => setNewLocation(e.target.value)}
+              />
+              <button type="button" className="restore-btn" onClick={() => setNewLocation(defaultLocation)}>
+                Restore
+              </button>
+            </div>
+          </div>
+          <div className="field">
             <label htmlFor="newDueDate" className="field-label-prominent">New Due Date</label>
             <div className="field-row">
               <input
@@ -84,7 +116,7 @@ export const ChangeReviewPanel = () => {
                 value={newDueDate}
                 onChange={(e) => setNewDueDate(e.target.value)}
               />
-              <button type="button" className="restore-btn" onClick={handleRestore}>
+              <button type="button" className="restore-btn" onClick={() => setNewDueDate(defaultDueDate)}>
                 Restore
               </button>
             </div>
