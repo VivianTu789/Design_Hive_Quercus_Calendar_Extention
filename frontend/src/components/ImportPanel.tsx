@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import type { Assignment } from '../models/assignment';
+import { getCourseColor } from '../features/courses/courseColors';
 
 interface CourseGroup {
   courseId: string;
@@ -406,8 +407,11 @@ export const ImportPanel = () => {
           </div>
 
           {/* Course Groups with Dropdown */}
-          {groups.map((group) => (
-            <div key={group.courseId} className="course-section">
+          {groups.map((group) => {
+            const courseColor = getCourseColor(group.courseId);
+
+            return (
+             <div key={group.courseId} className="course-section">
               {/* Course Row Header */}
               <div className="course-header" style={{
                 display: 'flex',
@@ -432,9 +436,9 @@ export const ImportPanel = () => {
                       }));
                     }
                   }}
-                  style={{ width: '20px', height: '20px' }}
+                  style={{ width: '20px', height: '20px', accentColor: courseColor }}
                 />
-                <span style={{fontWeight: '600', color: '#1e40af'}}>{group.courseName}</span>
+                <span style={{ fontWeight: '600', color: courseColor }}>{group.courseName}</span>
                 <span style={{marginLeft: 'auto', fontSize: '30px', fontWeight: 'bold'}}>{expandedCourses.has(group.courseId) ? '▾' : '▸'}</span>
               </div>
 
@@ -455,7 +459,7 @@ export const ImportPanel = () => {
                       type="checkbox"
                       checked={selectedAssignments.has(assignment.id)}
                       onChange={() => toggleAssignment(assignment.id)}
-                      style={{ width: '20px', height: '20px' }}
+                      style={{ width: '20px', height: '20px', accentColor: courseColor }}
                     />
                     <span style={{ fontWeight: '500' }}>{assignment.title}</span>
                   </div>
@@ -465,14 +469,15 @@ export const ImportPanel = () => {
                     href="https://example.com"
                     target="_blank"
                     rel="noreferrer"
-                    style={{ color: '#0b3b76', textDecoration: 'none' }}
+                    style={{ color: courseColor, textDecoration: 'none' }}
                   >
                     View
                   </a>
                 </label>
               ))}
             </div>
-          ))}
+          );
+        })}
         </section>
         <footer className="modal-footer">
           <button type="button" className="primary" onClick={handleImport}>
