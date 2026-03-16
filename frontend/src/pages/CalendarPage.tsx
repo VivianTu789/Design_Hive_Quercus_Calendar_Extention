@@ -1,6 +1,7 @@
 import { useCalendar } from '../context/CalendarContext';
 import { useState } from 'react';
 import { MonthView, WeekView, DayView } from '../components/CalendarViews';
+import { getCourseColor } from '../features/courses/courseColors';
 
 const CalendarViewSwitcher = () => {
   const { view, setView } = useCalendar();
@@ -47,23 +48,6 @@ const ImportButton = () => {
 export const CalendarPage = () => {
   const { courses, visibleCourseIds, setVisibleCourseIds } = useCalendar();
   const [isCalendarsOpen, setIsCalendarsOpen] = useState(false);
-
-  const getCourseColor = (courseId: string): string | undefined => {
-    switch (courseId) {
-      case 'course-6': // CSC318
-        return '#22c55e';
-      case 'course-5': // JRE420
-        return '#fb923c';
-      case 'course-7': // ECE568
-        return '#ec4899';
-      case 'course-8': // ECE316
-        return '#3b82f6';
-      case 'course-4': // ECE496
-        return '#8b5cf6';
-      default:
-        return undefined;
-    }
-  };
 
   const toggleCourse = (courseId: string) => {
     if (visibleCourseIds.includes(courseId)) {
@@ -117,7 +101,7 @@ export const CalendarPage = () => {
           >
             {courses.map((course) => {
               const checked = visibleCourseIds.includes(course.id);
-              const color = getCourseColor(course.id) ?? '#6b7280';
+              const color = getCourseColor(course.id);
               return (
                 <label
                   key={course.id}
