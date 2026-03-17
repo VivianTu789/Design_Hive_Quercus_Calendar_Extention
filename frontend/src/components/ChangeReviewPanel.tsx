@@ -8,10 +8,11 @@ const getSuggestedDate = () => {
 };
 
 export const ChangeReviewPanel = () => {
-  const { assignments, isChangeReviewOpen, closeChangeReview, updateAssignment, hideChangeAlert } =
+  const { assignments, courses, isChangeReviewOpen, closeChangeReview, updateAssignment, hideChangeAlert } =
     useCalendar();
   const [targetId, setTargetId] = useState<string | undefined>(undefined);
   const target = assignments.find((a) => a.id === targetId) ?? assignments[0];
+  const course = courses.find((c) => c.id === target?.courseId);
   const [newDueDate, setNewDueDate] = useState<string>('');
   const [defaultDueDate, setDefaultDueDate] = useState<string>('');
   const [newLocation, setNewLocation] = useState<string>('');
@@ -85,6 +86,9 @@ export const ChangeReviewPanel = () => {
         <section className="modal-body">
           <p>
             There has been a change to an assignment that needs your attention and confirmation to update the calendar.
+          </p>
+          <p>
+            <strong>Course:</strong> {course?.name ?? target.courseId}
           </p>
           <p>
             <strong>Assignment:</strong> {target.title}
