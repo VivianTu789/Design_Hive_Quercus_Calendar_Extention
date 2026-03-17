@@ -10,24 +10,49 @@ const getSuggestedDate = () => {
 export const ChangeReviewPanel = () => {
   const { assignments, isChangeReviewOpen, closeChangeReview, updateAssignment, hideChangeAlert } =
     useCalendar();
-  const target = assignments[0];
+  const [targetId, setTargetId] = useState<string | undefined>(undefined);
+  const target = assignments.find((a) => a.id === targetId) ?? assignments[0];
   const [newDueDate, setNewDueDate] = useState<string>('');
   const [defaultDueDate, setDefaultDueDate] = useState<string>('');
   const [newLocation, setNewLocation] = useState<string>('');
   const [defaultLocation, setDefaultLocation] = useState<string>('');
 
-  useEffect(() => {
-    if (!isChangeReviewOpen || !target) return;
-    const suggested = getSuggestedDate();
-    setNewDueDate(suggested);
-    setDefaultDueDate(suggested);
+  const getRandomInt = (min: number, max: number) => {
+    const low = Math.ceil(min);
+    const high = Math.floor(max);
+    return Math.floor(Math.random() * (high - low + 1)) + low;
+  };
 
-    // Suggest a new location change for the example alert.
-    const currentLocation = target.location ?? 'Room 101';
-    const suggestedLocation = currentLocation === 'Online' ? 'Room 202' : 'Online';
+  useEffect(() => {
+    if (!isChangeReviewOpen) return;
+
+    // Prefer recently imported assignments (status === 'new') for the change review example.
+    const imported = assignments.filter((a) => a.status === 'new');
+    const pool = imported.length > 0 ? imported : assignments;
+    if (pool.length === 0) return;
+
+    const chosen = pool[getRandomInt(0, pool.length - 1)];
+    setTargetId(chosen.id);
+
+    // Suggest a due date change (1–3 days later than current deadline)
+    const baseDate = new Date(chosen.dueDate);
+    const offsetDays = getRandomInt(1, 3);
+    const suggestedDate = new Date(baseDate);
+    suggestedDate.setDate(baseDate.getDate() + offsetDays);
+    const isoSuggested = suggestedDate.toISOString().slice(0, 16);
+
+    setNewDueDate(isoSuggested);
+    setDefaultDueDate(isoSuggested);
+
+    // Suggest a location change (toggle between an online and room suggestion).
+    const currentLocation = chosen.location?.trim() ? chosen.location : 'Room 101';
+    const suggestedLocation = currentLocation.toLowerCase().includes('online')
+      ? `Room ${100 + getRandomInt(1, 10)}`
+      : 'Online';
+
     setNewLocation(suggestedLocation);
     setDefaultLocation(suggestedLocation);
-  }, [isChangeReviewOpen, target]);
+  }, [isChangeReviewOpen, assignments]);
 
   if (!isChangeReviewOpen || !target) return null;
 
