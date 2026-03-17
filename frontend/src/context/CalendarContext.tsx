@@ -245,7 +245,7 @@ const getDefaultState = (): CalendarState => {
       assignmentLink: '',
       location: 'SF 2201',
     },
-    // Intro sample assignments for COMP 101, MATH 202, HIST 210
+    /* // Intro sample assignments for COMP 101, MATH 202, HIST 210
     {
       id: 'comp101-assignment-1',
       title: 'COMP 101 Assignment',
@@ -278,7 +278,7 @@ const getDefaultState = (): CalendarState => {
       courseId: 'course-3',
       assignmentLink: '',
       location: '',
-    },
+    }, */
   ];
 
   return {
