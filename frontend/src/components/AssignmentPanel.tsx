@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import type { Assignment } from '../models/assignment';
 
@@ -25,15 +25,36 @@ export const AssignmentPanel = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  const clampPositionToViewport = (x: number, y: number) => {
+    const el = panelRef.current;
+    if (!el) return { x, y };
+
+    const rect = el.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+
+    // Keep a small margin so the user can always grab the header again.
+    const margin = 8;
+    const minX = margin;
+    const minY = margin;
+    const maxX = Math.max(minX, window.innerWidth - width - margin);
+    const maxY = Math.max(minY, window.innerHeight - height - margin);
+
+    return {
+      x: Math.min(maxX, Math.max(minX, x)),
+      y: Math.min(maxY, Math.max(minY, y)),
+    };
+  };
 
   useEffect(() => {
     if (!dragging) return;
 
     const handleMouseMove = (event: MouseEvent) => {
-      setPosition({
-        x: event.clientX - dragOffset.x,
-        y: event.clientY - dragOffset.y,
-      });
+      const nextX = event.clientX - dragOffset.x;
+      const nextY = event.clientY - dragOffset.y;
+      setPosition(clampPositionToViewport(nextX, nextY));
     };
 
     const handleMouseUp = () => {
@@ -112,13 +133,26 @@ export const AssignmentPanel = () => {
   };
 
   const handleDragStart = (event: React.MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
+    if (event.button !== 0) return; // Only left-click starts dragging.
+
+    // Only drag when mousing down on the header background (not on the text elements),
+    // so users can still select/copy header content.
+    if (event.target !== event.currentTarget) return;
+
+    const el = panelRef.current;
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
     if (!rect) return;
-    setDragging(true);
+
+    // Clamp current position first so the element never ends up outside the viewport.
+    const clamped = clampPositionToViewport(rect.left, rect.top);
+    setPosition(clamped);
     setDragOffset({
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: event.clientX - clamped.x,
+      y: event.clientY - clamped.y,
     });
+    setDragging(true);
   };
 
   const course = courses.find((c) => c.id === selected.courseId);
@@ -143,18 +177,22 @@ export const AssignmentPanel = () => {
   return (
     <div className="modal-backdrop">
       <div
+        ref={panelRef}
         className="modal"
         style={{
           position: 'fixed',
           top: position.y || '50%',
           left: position.x || '50%',
           transform: position.x || position.y ? 'none' : 'translate(-50%, -50%)',
-          cursor: dragging ? 'grabbing' : 'move',
+          cursor: dragging ? 'grabbing' : 'default',
         }}
-        onMouseDown={handleDragStart}
       >
         <div className="assignment-panel">
-          <div className="assignment-panel-header-course">
+          <div
+            className="assignment-panel-header-course"
+            onMouseDown={handleDragStart}
+            style={{ cursor: dragging ? 'grabbing' : 'move' }}
+          >
             <span>{course?.name ?? 'Unassigned course'}</span>
             <button
               type="button"
@@ -165,7 +203,11 @@ export const AssignmentPanel = () => {
               ×
             </button>
           </div>
-          <div className="assignment-panel-header-details">
+          <div
+            className="assignment-panel-header-details"
+            onMouseDown={handleDragStart}
+            style={{ cursor: dragging ? 'grabbing' : 'move' }}
+          >
             <div className="assignment-panel-title">{draft?.title ?? selected.title}</div>
             <div className="assignment-panel-meta">
               <span>Due Date:</span>
@@ -260,6 +302,7 @@ export const AssignmentPanel = () => {
                   value={draft?.courseId ?? ''}
                   onChange={(e) => handleFieldChange('courseId', e.target.value)}
                 >
+                  <option value="">None</option>
                   {courses.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
